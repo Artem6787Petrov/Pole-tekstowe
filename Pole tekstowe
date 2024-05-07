@@ -1,0 +1,97 @@
+#include <iostream>
+#include <conio.h>
+#include <windows.h>
+
+const int WIDTH = 20; // Szerokość pola tekstowego
+const int LEFT_MARGIN = 5; // Margines od lewej krawędzi konsoli
+
+void gotoxy(int x, int y) {
+    COORD coord;
+    coord.X = x;
+    coord.Y = y;
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+void drawTextField(int x, int y, int width) {
+    // Rysowanie ramki pola tekstowego
+    gotoxy(x, y);
+    for (int i = 0; i <= width + 1; ++i) std::cout << "-";
+    for (int i = 1; i <= 3; ++i) {
+        gotoxy(x, y + i);
+        std::cout << "|";
+        gotoxy(x + width + 1, y + i);
+        std::cout << "|";
+    }
+    gotoxy(x, y + 4);
+    for (int i = 0; i <= width + 1; ++i) std::cout << "-";
+}
+
+void moveCursor(int &cursorPos, int direction) {
+    if (direction == -1 && cursorPos > 0) {
+        cursorPos--;
+    } else if (direction == 1 && cursorPos < WIDTH - 1) {
+        cursorPos++;
+    }
+}
+
+int main() {
+    // Ustawienie koloru tekstu na biały
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+
+    int cursorPos = 0; // Pozycja kursora w polu tekstowym
+    char text[WIDTH] = {}; // Inicjalizacja tablicy na tekst
+    int textLength = 0; // Aktualna długość tekstu
+
+    // Ustawienie kursora w miejscu rozpoczęcia pola tekstowego
+    int cursorX = LEFT_MARGIN + 1;
+    int cursorY = 3;
+    gotoxy(cursorX, cursorY);
+    
+    drawTextField(LEFT_MARGIN, 2, WIDTH);
+
+    char ch;
+    do {
+        ch = _getch();
+        if (ch == '\r') { // Enter
+            break;
+        } else if (ch == 8) { // Backspace
+            if (cursorPos > 0) {
+                for (int i = cursorPos - 1; i < textLength; ++i) {
+                    text[i] = text[i + 1];
+                }
+                textLength--;
+                cursorPos--;
+            }
+        } else if (ch == 224) { // Special keys
+            ch = _getch();
+            if (ch == 75) { // Left arrow
+                moveCursor(cursorPos, -1);
+            } else if (ch == 77) { // Right arrow
+                moveCursor(cursorPos, 1);
+            }
+        } else if (ch >= 32 && ch <= 126 && textLength < WIDTH - 1) { // Printable characters
+            for (int i = textLength; i > cursorPos; --i) {
+                text[i] = text[i - 1];
+            }
+            text[cursorPos] = ch;
+            cursorPos++;
+            textLength++;
+        }
+
+        // Rysowanie tekstu w polu tekstowym
+        gotoxy(cursorX, cursorY);
+        for (int i = 0; i < WIDTH; ++i) {
+            if (i < textLength) {
+                std::cout << text[i];
+            } else {
+                std::cout << " ";
+            }
+        }
+
+        // Przesunięcie kursora na odpowiednią pozycję
+        gotoxy(cursorX + cursorPos, cursorY);
+
+    } while (true);
+
+    return 0;
+}
